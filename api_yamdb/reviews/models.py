@@ -1,7 +1,40 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.validators import MaxValueValidator
+import datetime
 
 from .constants import USER, ADMIN, MODERATOR, ROLE_CHOICES
+
+
+class User(AbstractUser):
+    """Модель пользователя"""
+    email = models.EmailField('Почта', max_length=254, unique=True)
+    bio = models.TextField('Биография', blank=True)
+    role = models.CharField(
+        'Роль', max_length=20, choices=ROLE_CHOICES, default=USER
+    )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+
+    @property
+    def is_user(self):
+        """Проверка роли пользователя"""
+        return self.role == USER
+
+    @property
+    def is_moderator(self):
+        """Проверка роли модератора"""
+        return self.role == MODERATOR
+
+    @property
+    def is_admin(self):
+        """Проверка роли администратора"""
+        return self.role == ADMIN
+
+    def __str__(self):
+        return self.username
 
 
 class Category(models.Model):
@@ -53,7 +86,8 @@ class Title(models.Model):
         verbose_name='Название произведения'
     )
     year = models.IntegerField(
-        verbose_name='Год выпуска'
+        verbose_name='Год выпуска',
+        validators=[MaxValueValidator(datetime.datetime.now().year)]
     )
     description = models.TextField(
         blank=True,
@@ -79,34 +113,3 @@ class Title(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class User(AbstractUser):
-    """Модель пользователя"""
-    email = models.EmailField('Почта', max_length=254, unique=True)
-    bio = models.TextField('Биография', blank=True)
-    role = models.CharField(
-        'Роль', max_length=20, choices=ROLE_CHOICES, default=USER
-    )
-
-    class Meta:
-        verbose_name = 'Пользователь'
-        verbose_name_plural = 'Пользователи'
-
-    @property
-    def is_user(self):
-        """Проверка роли пользователя"""
-        return self.role == USER
-
-    @property
-    def is_moderator(self):
-        """Проверка роли модератора"""
-        return self.role == MODERATOR
-
-    @property
-    def is_admin(self):
-        """Проверка роли администратора"""
-        return self.role == ADMIN
-
-    def __str__(self):
-        return self.username
