@@ -38,3 +38,11 @@ class SignupSerializer(serializers.Serializer):
             )
 
         return attrs
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+        validators=(UnicodeUsernameValidator(),),
+    )
+    confirmation_code = serializers.CharField()
