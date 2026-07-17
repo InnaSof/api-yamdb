@@ -6,6 +6,11 @@ import datetime
 from .constants import USER, ADMIN, MODERATOR, ROLE_CHOICES
 
 
+def current_year():
+    """Возвращает текущий год для валидатора"""
+    return datetime.datetime.now().year
+
+
 class User(AbstractUser):
     """Модель пользователя"""
     email = models.EmailField('Почта', max_length=254, unique=True)
@@ -87,7 +92,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Год выпуска',
-        validators=[MaxValueValidator(datetime.datetime.now().year)]
+        validators=[MaxValueValidator(current_year)]
     )
     description = models.TextField(
         blank=True,
