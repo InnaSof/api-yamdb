@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Review, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 
 from .permissions import (
     IsAdminOrReadOnly,
@@ -20,6 +20,7 @@ from .permissions import (
 )
 from .serializers import (
     CategorySerializer,
+    CommentSerializer,
     GenreSerializer,
     ReviewSerializer,
     SignupSerializer,
@@ -166,4 +167,44 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(
             author=self.request.user,
             title=self.get_title(),
+        )
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Управление комментариями к отзывам."""
+
+    serializer_class = CommentSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrModeratorOrAdminOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+        'head',
+        'options',
+    )
+
+    def get_review(self):
+        title = get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id'),
+        )
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title=title,
+        )
+
+    def get_queryset(self):
+        return Comment.objects.filter(
+            review=self.get_review()
+        ).select_related('author')
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            review=self.get_review(),
         )
