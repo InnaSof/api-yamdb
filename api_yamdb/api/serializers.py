@@ -1,8 +1,11 @@
-from django.contrib.auth import get_user_model
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from rest_framework import serializers
+import datetime
 
-User = get_user_model()
+from  django.contrib.auth import get_user_model
+from  django.contrib.auth.validators import UnicodeUsernameValidator
+from  rest_framework  import serializers
+from  reviews.models  import Category, Genre, Title
+
+User  =  get_user_model()
 
 
 class SignupSerializer(serializers.Serializer):
@@ -17,7 +20,6 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 'Использовать имя "me" запрещено.'
             )
-
         return value
 
     def validate(self, attrs):
@@ -36,7 +38,6 @@ class SignupSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {'email': 'Такой email уже используется.'}
             )
-
         return attrs
 
 
@@ -46,3 +47,45 @@ class TokenSerializer(serializers.Serializer):
         validators=(UnicodeUsernameValidator(),),
     )
     confirmation_code = serializers.CharField()
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('id', 'name', 'slug')
+
+        
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ('id', 'name', 'slug')
+        
+
+class TitleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
+        
+        
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True
+    )
+    
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
+    
+    def validate_year(self, value):
+        if value > datetime.now().year:
+            raise serializers.ValidationError(
+                'Год выпуска не может быть больше текущего'
+            )
+        return value        
+        
