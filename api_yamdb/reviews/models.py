@@ -155,3 +155,26 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text[:30]
+
+
+class Comment(models.Model):
+    """Комментарий пользователя к отзыву."""
+
+    review = models.ForeignKey(
+        Review,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    text = models.TextField()
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='comments',
+    )
+    pub_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text[:30]
