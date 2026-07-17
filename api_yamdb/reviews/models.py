@@ -1,9 +1,15 @@
-from django.contrib.auth.models import AbstractUser
-from django.db import models
-from django.core.validators import MaxValueValidator
 import datetime
 
-from .constants import USER, ADMIN, MODERATOR, ROLE_CHOICES
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import MaxValueValidator
+from django.db import models
+
+from .constants import ADMIN, MODERATOR, ROLE_CHOICES, USER
+
+
+def current_year():
+    """Возвращает текущий год для валидатора"""
+    return datetime.datetime.now().year
 
 
 class User(AbstractUser):
@@ -87,7 +93,7 @@ class Title(models.Model):
     )
     year = models.IntegerField(
         verbose_name='Год выпуска',
-        validators=[MaxValueValidator(datetime.datetime.now().year)]
+        validators=[MaxValueValidator(current_year)]
     )
     description = models.TextField(
         blank=True,
