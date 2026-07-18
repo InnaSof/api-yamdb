@@ -142,7 +142,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         .order_by('id')
     )
     permission_classes = [IsAdminOrReadOnly]
-    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
+    http_method_names = ['get', 'post', 'patch', 'delete']
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = TitleFilter
     search_fields = ['name']
