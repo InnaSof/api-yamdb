@@ -2,24 +2,41 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.filters import SearchFilter
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    AllowAny,
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 
-from .permissions import IsAdminOrReadOnly, IsAdminOnly
-from .serializers import (CategorySerializer, GenreSerializer,
-                          SignupSerializer, TitleCreateSerializer,
-                          TitleSerializer, TokenSerializer, UserSerializer,
-                          AdminUserSerializer)
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAdminOnly,
+    IsAuthorOrModeratorOrAdminOrReadOnly,
+)
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    SignupSerializer,
+    TitleCreateSerializer,
+    TitleSerializer,
+    TokenSerializer,
+    UserSerializer,
+    AdminUserSerializer,
+)
 
 User = get_user_model()
 
@@ -83,11 +100,14 @@ class TokenAPIView(APIView):
         return Response({'token': access}, status=status.HTTP_200_OK)
 
 
-class CategoryViewSet(mixins.CreateModelMixin,
-                      mixins.ListModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """Управление категориями произведений."""
+
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -96,11 +116,14 @@ class CategoryViewSet(mixins.CreateModelMixin,
     lookup_field = 'slug'
 
 
-class GenreViewSet(mixins.CreateModelMixin,
-                   mixins.ListModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(
+    mixins.CreateModelMixin,
+    mixins.ListModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
     """Управление жанрами произведений."""
+
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = [IsAdminOrReadOnly]
@@ -111,9 +134,12 @@ class GenreViewSet(mixins.CreateModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Управление произведениями (фильмы, книги, музыка)."""
-    queryset = Title.objects.all().select_related(
-        'category'
-    ).prefetch_related('genre')
+
+    queryset = (
+        Title.objects.annotate(rating=Avg('reviews__score'))
+        .select_related('category')
+        .prefetch_related('genre')
+    )
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_fields = ['category__slug', 'genre__slug', 'year']
@@ -125,14 +151,90 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
 
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Управление отзывами на произведения."""
+
+    serializer_class = ReviewSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrModeratorOrAdminOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+        'head',
+        'options',
+    )
+
+    def get_title(self):
+        return get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id'),
+        )
+
+    def get_queryset(self):
+        return Review.objects.filter(title=self.get_title()).select_related(
+            'author'
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            title=self.get_title(),
+        )
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Управление комментариями к отзывам."""
+
+    serializer_class = CommentSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrModeratorOrAdminOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+        'head',
+        'options',
+    )
+
+    def get_review(self):
+        title = get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id'),
+        )
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title=title,
+        )
+
+    def get_queryset(self):
+        return Comment.objects.filter(review=self.get_review()).select_related(
+            'author'
+        )
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            review=self.get_review(),
+        )
+
+
 class UserViewSet(viewsets.ModelViewSet):
     """Управление пользователями."""
+
     http_method_names = ('get', 'post', 'patch', 'delete')
     queryset = User.objects.all()
     lookup_field = 'username'
     serializer_class = AdminUserSerializer
     permission_classes = (IsAdminOnly,)
-    filter_backends = (SearchFilter, )
+    filter_backends = (SearchFilter,)
     search_fields = ('username',)
 
     @action(
