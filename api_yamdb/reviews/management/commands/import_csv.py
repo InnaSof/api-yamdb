@@ -14,7 +14,7 @@ class Command(BaseCommand):
         # Путь к папке с CSV файлами
         csv_path = 'static/data/'
 
-        self.stdout.write('🚀 Начинаем импорт данных...')
+        self.stdout.write('Начинаем импорт данных...')
 
         # Импортируем все файлы по порядку
         self.import_users(csv_path)
@@ -25,14 +25,14 @@ class Command(BaseCommand):
         self.import_reviews(csv_path)
         self.import_comments(csv_path)
 
-        self.stdout.write(self.style.SUCCESS('🎉 Импорт завершен!'))
+        self.stdout.write(self.style.SUCCESS('Импорт завершен!'))
 
     def import_users(self, csv_path):
         """Импорт пользователей"""
         filepath = os.path.join(csv_path, 'users.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ users.csv не найден'))
+            self.stdout.write(self.style.WARNING('users.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -54,14 +54,14 @@ class Command(BaseCommand):
                 )
                 count += 1
 
-            self.stdout.write(f'✅ Пользователи: {count} записей')
+            self.stdout.write(f'Пользователи: {count} записей')
 
     def import_categories(self, csv_path):
         """Импорт категорий"""
         filepath = os.path.join(csv_path, 'category.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ category.csv не найден'))
+            self.stdout.write(self.style.WARNING('category.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -78,14 +78,14 @@ class Command(BaseCommand):
                 )
                 count += 1
 
-            self.stdout.write(f'✅ Категории: {count} записей')
+            self.stdout.write(f'Категории: {count} записей')
 
     def import_genres(self, csv_path):
         """Импорт жанров"""
         filepath = os.path.join(csv_path, 'genre.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ genre.csv не найден'))
+            self.stdout.write(self.style.WARNING('genre.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -102,14 +102,14 @@ class Command(BaseCommand):
                 )
                 count += 1
 
-            self.stdout.write(f'✅ Жанры: {count} записей')
+            self.stdout.write(f'Жанры: {count} записей')
 
     def import_titles(self, csv_path):
         """Импорт произведений"""
         filepath = os.path.join(csv_path, 'titles.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ titles.csv не найден'))
+            self.stdout.write(self.style.WARNING('titles.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -121,7 +121,7 @@ class Command(BaseCommand):
                 category = Category.objects.filter(id=row['category']).first()
 
                 if not category:
-                    self.stdout.write(f'⚠️ Категория {row["category"]} не найдена')
+                    self.stdout.write(f'Категория {row["category"]} не найдена')
                     continue
 
                 Title.objects.get_or_create(
@@ -135,14 +135,14 @@ class Command(BaseCommand):
                 )
                 count += 1
 
-            self.stdout.write(f'✅ Произведения: {count} записей')
+            self.stdout.write(f'Произведения: {count} записей')
 
     def import_genre_title(self, csv_path):
         """Импорт связей произведений и жанров"""
         filepath = os.path.join(csv_path, 'genre_title.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ genre_title.csv не найден'))
+            self.stdout.write(self.style.WARNING('genre_title.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -161,17 +161,17 @@ class Command(BaseCommand):
 
                 except (Title.DoesNotExist, Genre.DoesNotExist):
                     self.stdout.write(
-                        f'⚠️ Связь не найдена: title={row["title_id"]}, genre={row["genre_id"]}'
+                        f'Связь не найдена: title={row["title_id"]}, genre={row["genre_id"]}'
                     )
 
-            self.stdout.write(f'✅ Связи жанров: {count} записей')
+            self.stdout.write(f'Связи жанров: {count} записей')
 
     def import_reviews(self, csv_path):
         """Импорт отзывов"""
         filepath = os.path.join(csv_path, 'review.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ review.csv не найден'))
+            self.stdout.write(self.style.WARNING('review.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -190,13 +190,13 @@ class Command(BaseCommand):
                 )
 
                 if created:
-                    self.stdout.write(f'  👤 Создан пользователь {author.username}')
+                    self.stdout.write(f'Создан пользователь {author.username}')
 
                 # Находим произведение
                 try:
                     title = Title.objects.get(id=row['title_id'])
                 except Title.DoesNotExist:
-                    self.stdout.write(f'  ⚠️ Произведение {row["title_id"]} не найдено')
+                    self.stdout.write(f'Произведение {row["title_id"]} не найдено')
                     continue
 
                 # Создаем отзыв
@@ -212,14 +212,14 @@ class Command(BaseCommand):
                 )
                 count += 1
 
-            self.stdout.write(f'✅ Отзывы: {count} записей')
+            self.stdout.write(f'Отзывы: {count} записей')
 
     def import_comments(self, csv_path):
         """Импорт комментариев"""
         filepath = os.path.join(csv_path, 'comments.csv')
 
         if not os.path.exists(filepath):
-            self.stdout.write(self.style.WARNING('⚠️ comments.csv не найден'))
+            self.stdout.write(self.style.WARNING('comments.csv не найден'))
             return
 
         with open(filepath, 'r', encoding='utf-8-sig') as f:
@@ -238,13 +238,13 @@ class Command(BaseCommand):
                 )
 
                 if created:
-                    self.stdout.write(f'  👤 Создан пользователь {author.username}')
+                    self.stdout.write(f'Создан пользователь {author.username}')
 
                 # Находим отзыв
                 try:
                     review = Review.objects.get(id=row['review_id'])
                 except Review.DoesNotExist:
-                    self.stdout.write(f'  ⚠️ Отзыв {row["review_id"]} не найден')
+                    self.stdout.write(f'Отзыв {row["review_id"]} не найден')
                     continue
 
                 # Создаем комментарий
@@ -259,4 +259,4 @@ class Command(BaseCommand):
                 )
                 count += 1
 
-            self.stdout.write(f'✅ Комментарии: {count} записей')
+            self.stdout.write(f'Комментарии: {count} записей')
