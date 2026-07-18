@@ -6,17 +6,20 @@ from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Genre, Title
 
-from .permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsAdminOnly
 from .serializers import (CategorySerializer, GenreSerializer,
                           SignupSerializer, TitleCreateSerializer,
-                          TitleSerializer, TokenSerializer)
+                          TitleSerializer, TokenSerializer, UserSerializer,
+                          AdminUserSerializer)
 
 User = get_user_model()
 
@@ -120,3 +123,34 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('create', 'update', 'partial_update'):
             return TitleCreateSerializer
         return TitleSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Управление пользователями."""
+    http_method_names = ('get', 'post', 'patch', 'delete')
+    queryset = User.objects.all()
+    lookup_field = 'username'
+    serializer_class = AdminUserSerializer
+    permission_classes = (IsAdminOnly,)
+    filter_backends = (SearchFilter, )
+    search_fields = ('username',)
+
+    @action(
+        methods=['GET', 'PATCH'],
+        permission_classes=[IsAuthenticated],
+        detail=False,
+        url_path='me',
+    )
+    def account_data_for_user(self, request):
+        if request.method == 'PATCH':
+            serializer = UserSerializer(
+                request.user,
+                data=request.data,
+                partial=True,
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+        else:
+            serializer = UserSerializer(request.user)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

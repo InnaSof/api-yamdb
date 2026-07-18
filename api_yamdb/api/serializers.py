@@ -5,6 +5,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 from reviews.models import Category, Genre, Title
 
+from .mixins import UserSerializerMixin
+
 User = get_user_model()
 
 
@@ -102,3 +104,13 @@ class TitleCreateSerializer(serializers.ModelSerializer):
                 'Год выпуска не может быть больше текущего'
             )
         return value
+
+
+class UserSerializer(UserSerializerMixin):
+
+    class Meta(UserSerializerMixin.Meta):
+        read_only_fields = ('role',)
+
+
+class AdminUserSerializer(UserSerializerMixin):
+    pass
