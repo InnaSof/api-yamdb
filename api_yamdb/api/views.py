@@ -8,7 +8,6 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.filters import SearchFilter
 from rest_framework.permissions import (
     AllowAny,
     IsAuthenticated,
@@ -140,6 +139,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         Title.objects.annotate(rating=Avg('reviews__score'))
         .select_related('category')
         .prefetch_related('genre')
+        .order_by('id')
     )
     permission_classes = [IsAdminOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
@@ -236,7 +236,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     serializer_class = AdminUserSerializer
     permission_classes = (IsAdminOnly,)
-    filter_backends = (SearchFilter,)
+    filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
     @action(
