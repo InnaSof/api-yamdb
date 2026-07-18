@@ -28,6 +28,7 @@ from .serializers import (
     TitleSerializer,
     TokenSerializer,
 )
+from .filters import TitleFilter
 
 User = get_user_model()
 
@@ -125,8 +126,9 @@ class TitleViewSet(viewsets.ModelViewSet):
         'category'
     ).prefetch_related('genre')
     permission_classes = [IsAdminOrReadOnly]
+    http_method_names = ['get', 'post', 'patch', 'delete', 'head', 'options']
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
-    filterset_fields = ['category__slug', 'genre__slug', 'year']
+    filterset_class = TitleFilter
     search_fields = ['name']
 
     def get_serializer_class(self):
