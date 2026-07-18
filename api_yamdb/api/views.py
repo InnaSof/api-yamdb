@@ -2,21 +2,32 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, mixins, status, viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Genre, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 
-from .permissions import IsAdminOrReadOnly
-from .serializers import (CategorySerializer, GenreSerializer,
-                          SignupSerializer, TitleCreateSerializer,
-                          TitleSerializer, TokenSerializer)
+from .permissions import (
+    IsAdminOrReadOnly,
+    IsAuthorOrModeratorOrAdminOrReadOnly,
+)
+from .serializers import (
+    CategorySerializer,
+    CommentSerializer,
+    GenreSerializer,
+    ReviewSerializer,
+    SignupSerializer,
+    TitleCreateSerializer,
+    TitleSerializer,
+    TokenSerializer,
+)
 
 User = get_user_model()
 
@@ -108,7 +119,9 @@ class GenreViewSet(mixins.CreateModelMixin,
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Управление произведениями (фильмы, книги, музыка)."""
-    queryset = Title.objects.all().select_related(
+    queryset = Title.objects.annotate(
+        rating=Avg('reviews__score')
+    ).select_related(
         'category'
     ).prefetch_related('genre')
     permission_classes = [IsAdminOrReadOnly]
@@ -120,3 +133,78 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ('create', 'update', 'partial_update'):
             return TitleCreateSerializer
         return TitleSerializer
+
+
+class ReviewViewSet(viewsets.ModelViewSet):
+    """Управление отзывами на произведения."""
+
+    serializer_class = ReviewSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrModeratorOrAdminOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+        'head',
+        'options',
+    )
+
+    def get_title(self):
+        return get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id'),
+        )
+
+    def get_queryset(self):
+        return Review.objects.filter(
+            title=self.get_title()
+        ).select_related('author')
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            title=self.get_title(),
+        )
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Управление комментариями к отзывам."""
+
+    serializer_class = CommentSerializer
+    permission_classes = (
+        IsAuthenticatedOrReadOnly,
+        IsAuthorOrModeratorOrAdminOrReadOnly,
+    )
+    http_method_names = (
+        'get',
+        'post',
+        'patch',
+        'delete',
+        'head',
+        'options',
+    )
+
+    def get_review(self):
+        title = get_object_or_404(
+            Title,
+            pk=self.kwargs.get('title_id'),
+        )
+        return get_object_or_404(
+            Review,
+            pk=self.kwargs.get('review_id'),
+            title=title,
+        )
+
+    def get_queryset(self):
+        return Comment.objects.filter(
+            review=self.get_review()
+        ).select_related('author')
+
+    def perform_create(self, serializer):
+        serializer.save(
+            author=self.request.user,
+            review=self.get_review(),
+        )
