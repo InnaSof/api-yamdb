@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -10,7 +10,7 @@ from .constants import ADMIN, MODERATOR, ROLE_CHOICES, USER
 
 def current_year():
     """Возвращает текущий год для валидатора"""
-    return datetime.datetime.now().year
+    return datetime.now().year
 
 
 class User(AbstractUser):
