@@ -13,12 +13,10 @@ class Command(BaseCommand):
     help = 'Импорт данных из CSV файлов'
 
     def handle(self, *args, **options):
-        # Путь к папке с CSV файлами
         csv_path = 'static/data/'
 
         self.stdout.write('Начинаем импорт данных...')
 
-        # Импортируем все файлы по порядку
         self.import_users(csv_path)
         self.import_categories(csv_path)
         self.import_genres(csv_path)
@@ -42,7 +40,6 @@ class Command(BaseCommand):
             count = 0
 
             for row in reader:
-                # Проверяем, есть ли уже такой пользователь
                 user, created = User.objects.get_or_create(
                     id=row['id'],
                     defaults={
@@ -119,11 +116,12 @@ class Command(BaseCommand):
             count = 0
 
             for row in reader:
-                # Находим категорию
                 category = Category.objects.filter(id=row['category']).first()
 
                 if not category:
-                    self.stdout.write(f'Категория {row["category"]} не найдена')
+                    self.stdout.write(
+                        f'Категория {row["category"]} не найдена'
+                    )
                     continue
 
                 Title.objects.get_or_create(
@@ -153,17 +151,16 @@ class Command(BaseCommand):
 
             for row in reader:
                 try:
-                    # Находим произведение и жанр
                     title = Title.objects.get(id=row['title_id'])
                     genre = Genre.objects.get(id=row['genre_id'])
 
-                    # Добавляем жанр к произведению
                     title.genre.add(genre)
                     count += 1
 
                 except (Title.DoesNotExist, Genre.DoesNotExist):
                     self.stdout.write(
-                        f'Связь не найдена: title={row["title_id"]}, genre={row["genre_id"]}'
+                        f'Связь не найдена: title={row["title_id"]}, '
+                        f'genre={row["genre_id"]}'
                     )
 
             self.stdout.write(f'Связи жанров: {count} записей')
@@ -181,7 +178,6 @@ class Command(BaseCommand):
             count = 0
 
             for row in reader:
-                # Находим или создаем автора
                 author, created = User.objects.get_or_create(
                     id=row['author'],
                     defaults={
@@ -194,14 +190,14 @@ class Command(BaseCommand):
                 if created:
                     self.stdout.write(f'Создан пользователь {author.username}')
 
-                # Находим произведение
                 try:
                     title = Title.objects.get(id=row['title_id'])
                 except Title.DoesNotExist:
-                    self.stdout.write(f'Произведение {row["title_id"]} не найдено')
+                    self.stdout.write(
+                        f'Произведение {row["title_id"]} не найдено'
+                    )
                     continue
 
-                # Создаем отзыв
                 Review.objects.get_or_create(
                     id=row['id'],
                     defaults={
@@ -229,7 +225,6 @@ class Command(BaseCommand):
             count = 0
 
             for row in reader:
-                # Находим или создаем автора
                 author, created = User.objects.get_or_create(
                     id=row['author'],
                     defaults={
@@ -242,14 +237,14 @@ class Command(BaseCommand):
                 if created:
                     self.stdout.write(f'Создан пользователь {author.username}')
 
-                # Находим отзыв
                 try:
                     review = Review.objects.get(id=row['review_id'])
                 except Review.DoesNotExist:
-                    self.stdout.write(f'Отзыв {row["review_id"]} не найден')
+                    self.stdout.write(
+                        f'Отзыв {row["review_id"]} не найден'
+                    )
                     continue
 
-                # Создаем комментарий
                 Comment.objects.get_or_create(
                     id=row['id'],
                     defaults={
