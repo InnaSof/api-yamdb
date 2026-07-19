@@ -230,7 +230,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """Управление пользователями."""
 
     http_method_names = ('get', 'post', 'patch', 'delete')
-    queryset = User.objects.all()
+    queryset = User.objects.all().order_by('id')
     lookup_field = 'username'
     serializer_class = AdminUserSerializer
     permission_classes = (IsAdminOnly,)
