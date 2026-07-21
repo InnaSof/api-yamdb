@@ -1,6 +1,3 @@
-from django.conf import settings
-from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
@@ -16,6 +13,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import User
 from .filters import TitleFilter
 from .permissions import (
     IsAdminOrReadOnly,
@@ -34,7 +32,6 @@ from .serializers import (
     UserSerializer,
     AdminUserSerializer,
 )
-from users.models import User
 
 
 class SignupAPIView(APIView):
@@ -46,25 +43,7 @@ class SignupAPIView(APIView):
     def post(self, request):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        username = serializer.validated_data['username']
-        email = serializer.validated_data['email']
-
-        user, created = User.objects.get_or_create(
-            username=username,
-            defaults={
-                'email': email,
-            },
-        )
-
-        confirmation_code = default_token_generator.make_token(user)
-
-        send_mail(
-            subject='Код подтверждения',
-            message=f'Ваш код подтверждения: {confirmation_code}',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[email],
-        )
+        serializer.save()
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
@@ -79,18 +58,7 @@ class TokenAPIView(APIView):
         serializer = TokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user = get_object_or_404(
-            User, username=serializer.validated_data['username']
-        )
-        confirmation_code = serializer.validated_data['confirmation_code']
-
-        if not default_token_generator.check_token(user, confirmation_code):
-            return Response(
-                {'confirmation_code': 'Неверный код подтверждения!'},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        refresh = RefreshToken.for_user(user)
+        refresh = RefreshToken.for_user(serializer.validated_data['user'])
         access = str(refresh.access_token)
 
         return Response({'token': access}, status=status.HTTP_200_OK)
