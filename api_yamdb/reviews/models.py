@@ -4,58 +4,48 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from .constants import MAX_LENGTH_NAME, MAX_LENGTH_SLUG
+
 
 def current_year():
     """Возвращает текущий год для валидатора"""
     return datetime.now().year
 
-
-class Category(models.Model):
-    """Модель категории"""
+class NameSlugBase(models.Model):
     name = models.CharField(
-        max_length=256,
-        verbose_name='Название категории'
+        max_length=MAX_LENGTH_NAME,
+        verbose_name='Название'
     )
     slug = models.SlugField(
-        max_length=50,
+        max_length=MAX_LENGTH_SLUG,
         unique=True,
-        verbose_name='Слаг категории'
+        verbose_name='Слаг'
     )
 
+    class Meta:
+        abstract = True
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
+
+
+class Category(NameSlugBase):
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-        ordering = ('name',)
-
-    def __str__(self):
-        return self.name
 
 
-class Genre(models.Model):
-    """Модель жанра произведения"""
-    name = models.CharField(
-        max_length=256,
-        verbose_name='Название жанра'
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True,
-        verbose_name='Слаг жанра'
-    )
-
+class Genre(NameSlugBase):
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-        ordering = ('name',)
-
-    def __str__(self):
-        return self.name
 
 
 class Title(models.Model):
     """Модель произведения"""
     name = models.CharField(
-        max_length=256,
+        max_length=MAX_LENGTH_NAME,
         verbose_name='Название произведения'
     )
     year = models.IntegerField(
@@ -70,6 +60,7 @@ class Title(models.Model):
         Category,
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
         related_name='titles',
         verbose_name='Категория'
     )
