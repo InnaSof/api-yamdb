@@ -84,24 +84,26 @@ class TitleSerializer(serializers.ModelSerializer):
         )
 
 
-class TitleCreateSerializer(serializers.ModelSerializer):
-    category = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Category.objects.all()
-    )
-    genre = serializers.SlugRelatedField(
-        slug_field='slug', queryset=Genre.objects.all(), many=True
-    )
+    class TitleCreateSerializer(serializers.ModelSerializer):
+        category = serializers.SlugRelatedField(
+            slug_field='slug',
+            queryset=Category.objects.all()
+        )
+        genre = serializers.SlugRelatedField(
+            slug_field='slug',
+            queryset=Genre.objects.all(),
+            many=True,
+            allow_empty=False,
+            allow_null=False,
+        )
 
-    class Meta:
-        model = Title
-        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
+        class Meta:
+            model = Title
+            fields = ('id', 'name', 'year', 'description', 'category', 'genre')
 
-    def validate_year(self, value):
-        if value > datetime.datetime.now().year:
-            raise serializers.ValidationError(
-                'Год выпуска не может быть больше текущего'
-            )
-        return value
+        def to_representation(self, instance):
+            """Возвращаем полные объекты для category и genre, а также rating."""
+            return TitleSerializer(instance).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
