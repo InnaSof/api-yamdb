@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -35,8 +34,7 @@ from .serializers import (
     UserSerializer,
     AdminUserSerializer,
 )
-
-User = get_user_model()
+from users.models import User
 
 
 class SignupAPIView(APIView):
@@ -97,37 +95,29 @@ class TokenAPIView(APIView):
 
         return Response({'token': access}, status=status.HTTP_200_OK)
 
-
-class CategoryViewSet(
+class BaseCategoryGenreViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
-    """Управление категориями произведений."""
+    """Базовый вьюсет для категорий и жанров."""
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['name']
+    lookup_field = 'slug'
 
+
+class CategoryViewSet(BaseCategoryGenreViewSet):
+    """Управление категориями произведений."""
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = [IsAdminOrReadOnly]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
-    lookup_field = 'slug'
 
 
-class GenreViewSet(
-    mixins.CreateModelMixin,
-    mixins.ListModelMixin,
-    mixins.DestroyModelMixin,
-    viewsets.GenericViewSet,
-):
+class GenreViewSet(BaseCategoryGenreViewSet):
     """Управление жанрами произведений."""
-
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = [IsAdminOrReadOnly]
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['name']
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -229,7 +219,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """Управление пользователями."""
 
     http_method_names = ('get', 'post', 'patch', 'delete')
-    queryset = User.objects.all().order_by('id')
+    queryset = User.objects.all()
     lookup_field = 'username'
     serializer_class = AdminUserSerializer
     permission_classes = (IsAdminOnly,)
