@@ -95,6 +95,7 @@ class TokenAPIView(APIView):
 
         return Response({'token': access}, status=status.HTTP_200_OK)
 
+
 class BaseCategoryGenreViewSet(
     mixins.CreateModelMixin,
     mixins.ListModelMixin,
