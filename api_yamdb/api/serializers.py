@@ -2,10 +2,9 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
 from reviews.models import Category, Comment, Genre, Review, Title
+from users.models import User
 
 from .mixins import UserSerializerMixin
-
-from users.models import User
 
 
 class SignupSerializer(serializers.Serializer):
@@ -14,13 +13,6 @@ class SignupSerializer(serializers.Serializer):
         validators=(UnicodeUsernameValidator(),),
     )
     email = serializers.EmailField(max_length=254)
-
-    def validate_username(self, value):
-        if value.lower() == 'me':
-            raise serializers.ValidationError(
-                'Использовать имя "me" запрещено.'
-            )
-        return value
 
     def validate(self, attrs):
         username = attrs['username']
