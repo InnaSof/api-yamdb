@@ -137,7 +137,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         Title.objects.annotate(rating=Avg('reviews__score'))
         .select_related('category')
         .prefetch_related('genre')
-        .order_by('id')
     )
     permission_classes = [IsAdminOrReadOnly]
     http_method_names = ['get', 'post', 'patch', 'delete']
