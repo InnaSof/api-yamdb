@@ -1,6 +1,3 @@
-import datetime
-
-from django.contrib.auth import get_user_model
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from rest_framework import serializers
 
@@ -8,7 +5,7 @@ from reviews.models import Category, Comment, Genre, Review, Title
 
 from .mixins import UserSerializerMixin
 
-User = get_user_model()
+from users.models import User
 
 
 class SignupSerializer(serializers.Serializer):
@@ -84,26 +81,26 @@ class TitleSerializer(serializers.ModelSerializer):
         )
 
 
-    class TitleCreateSerializer(serializers.ModelSerializer):
-        category = serializers.SlugRelatedField(
-            slug_field='slug',
-            queryset=Category.objects.all()
-        )
-        genre = serializers.SlugRelatedField(
-            slug_field='slug',
-            queryset=Genre.objects.all(),
-            many=True,
-            allow_empty=False,
-            allow_null=False,
-        )
+class TitleCreateSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Category.objects.all()
+    )
+    genre = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Genre.objects.all(),
+        many=True,
+        allow_empty=False,
+        allow_null=False,
+    )
 
-        class Meta:
-            model = Title
-            fields = ('id', 'name', 'year', 'description', 'category', 'genre')
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
 
-        def to_representation(self, instance):
-            """Возвращаем полные объекты для category и genre, а также rating."""
-            return TitleSerializer(instance).data
+    def to_representation(self, instance):
+        """Возвращаем полные объекты для category и genre, а также rating."""
+        return TitleSerializer(instance).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
