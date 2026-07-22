@@ -1,15 +1,10 @@
-from datetime import datetime
-
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .constants import MAX_LENGTH_NAME, MAX_LENGTH_SLUG
+from .validators import validate_year_not_future
 
-
-def current_year():
-    """Возвращает текущий год для валидатора"""
-    return datetime.now().year
 
 class NameSlugBase(models.Model):
     name = models.CharField(
@@ -48,9 +43,9 @@ class Title(models.Model):
         max_length=MAX_LENGTH_NAME,
         verbose_name='Название произведения'
     )
-    year = models.IntegerField(
+    year = models.SmallIntegerField(
         verbose_name='Год выпуска',
-        validators=[MaxValueValidator(current_year)]
+        validators=[validate_year_not_future]
     )
     description = models.TextField(
         blank=True,
