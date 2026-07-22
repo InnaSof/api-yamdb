@@ -12,7 +12,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
 from users.models import User
 from .filters import TitleFilter
 from .permissions import (
@@ -133,9 +133,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
     def get_queryset(self):
-        return Review.objects.filter(title=self.get_title()).select_related(
-            'author'
-        )
+        return self.get_title().reviews.select_related('author')
 
     def perform_create(self, serializer):
         serializer.save(
@@ -162,20 +160,14 @@ class CommentViewSet(viewsets.ModelViewSet):
     )
 
     def get_review(self):
-        title = get_object_or_404(
-            Title,
-            pk=self.kwargs.get('title_id'),
-        )
         return get_object_or_404(
             Review,
             pk=self.kwargs.get('review_id'),
-            title=title,
+            title_id=self.kwargs.get('title_id'),
         )
 
     def get_queryset(self):
-        return Comment.objects.filter(review=self.get_review()).select_related(
-            'author'
-        )
+        return self.get_review().comments.select_related('author')
 
     def perform_create(self, serializer):
         serializer.save(
