@@ -1,13 +1,10 @@
 import csv
 import os
 
-from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from reviews.models import Category, Genre, Title, Review, Comment
-from reviews.constants import USER
-
-User = get_user_model()
+from users.models import User
 
 
 class Command(BaseCommand):
@@ -46,7 +43,7 @@ class Command(BaseCommand):
                     defaults={
                         'username': row['username'],
                         'email': row['email'],
-                        'role': row.get('role', USER),
+                        'role': row.get('role', User.Role.USER),
                         'bio': row.get('bio', ''),
                         'first_name': row.get('first_name', ''),
                         'last_name': row.get('last_name', ''),
@@ -184,7 +181,7 @@ class Command(BaseCommand):
                     defaults={
                         'username': f'user_{row["author"]}',
                         'email': f'user_{row["author"]}@example.com',
-                        'role': USER,
+                        'role': User.Role.USER,
                     }
                 )
 
@@ -231,7 +228,7 @@ class Command(BaseCommand):
                     defaults={
                         'username': f'user_{row["author"]}',
                         'email': f'user_{row["author"]}@example.com',
-                        'role': USER,
+                        'role': User.Role.USER,
                     }
                 )
 
