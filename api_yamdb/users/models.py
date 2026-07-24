@@ -6,7 +6,6 @@ from .validators import validate_not_me
 from reviews.constants import (
     MAX_LENGTH_USERNAME,
     MAX_LENGTH_EMAIL,
-    MAX_LENGTH_ROLE,
 )
 
 
@@ -32,7 +31,7 @@ class User(AbstractUser):
     bio = models.TextField('Биография', blank=True)
     role = models.CharField(
         'Роль',
-        max_length=MAX_LENGTH_ROLE,
+        max_length=max(len(value) for value, _ in Role.choices),
         choices=Role.choices,
         default=Role.USER,
     )
