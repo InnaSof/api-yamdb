@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 
 from reviews.models import Category, Genre, Title, Review, Comment
-from reviews.constants import USER
+from users.constants import USER
 
 User = get_user_model()
 

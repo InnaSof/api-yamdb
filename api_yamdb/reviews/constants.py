@@ -1,11 +1,3 @@
-USER = 'user'
-MODERATOR = 'moderator'
-ADMIN = 'admin'
-
-MAX_LENGTH_USERNAME = 150
-MAX_LENGTH_EMAIL = 254
-MAX_LENGTH_ROLE = max(len(role) for role in (USER, MODERATOR, ADMIN))
-
 MAX_LENGTH_NAME = 256
 MAX_LENGTH_SLUG = 50
 
