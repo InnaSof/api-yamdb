@@ -3,7 +3,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
 
 from .validators import validate_not_me
-from .constants import (
+from reviews.constants import (
     MAX_LENGTH_USERNAME,
     MAX_LENGTH_EMAIL,
 )
